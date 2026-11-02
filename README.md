@@ -135,23 +135,7 @@ Entries are validated by a **content fingerprint** (sha1 of the first 64 KB), no
 
 ---
 
-## 6. Relationship to `dsh-compat-check`
-
-| | `dsh-compat-check` | `dsh-compat-optimize` (this) |
-| --- | --- | --- |
-| Role | The check itself (verdicts, report, version bumps) | Fast path / cost reduction around it |
-| Entry | `compat_check` tool (LLM) | `compat_optimize` tool + offline CLI |
-| Verdict logic | Single source of truth | Reused via `runAction('check')`, not reimplemented |
-| Cache | Own format | Same directory, same format |
-| Extras | — | Warm-up, cache stats, benchmarks, zero-token CLI |
-
-If `dsh-compat-check` is not installed, this plugin falls back to an equivalent built-in check
-(reads each plugin's `package.json`, the runtime version, then applies semver rules) and labels
-the result `source: "fallback"` — it never pretends to be the upstream plugin.
-
----
-
-## 7. Self-test
+## 6. Self-test
 
 ```bash
 node _selftest.mjs        # exit code 0 = all assertions passed
@@ -164,7 +148,7 @@ Everything runs without a DSH installation; the two assertions that import the D
 
 ---
 
-## 8. Requirements
+## 7. Requirements
 
 - Node.js ≥ 20 (uses built-in `fetch`, `node:test`-free plain assertions)
 - DSH `>=0.2.1-rc.5 <0.3.0` when used as a plugin

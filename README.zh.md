@@ -160,26 +160,7 @@ CLI **零 LLM 依赖**、**零网络**（只有显式 `--notes` / `--refresh` / 
 
 ---
 
-## 6. 与 `dsh-compat-check` 的分工
-
-| | `dsh-compat-check` | `dsh-compat-optimize`（本插件） |
-| --- | --- | --- |
-| 定位 | 体检**本体**（判定 + 报告 + 改版本声明 + 每周上游巡检） | 体检的**快路径与降本**外壳 |
-| 入口 | `compat_check` 工具（LLM 调用） | `compat_optimize` 工具 + **离线 CLI** |
-| 判定逻辑 | 唯一一份 | **不重复实现**：`source=plugin` 时直接调主插件的 `runAction('check')` |
-| 缓存 | 已有 | **共用同一份缓存目录**（格式一致） |
-| 额外能力 | —— | 缓存预热 / 缓存状态统计 / 耗时基准（bench）/ 零 token CLI |
-
-主插件整个不在时，本插件会退化为自实现的等价检查（读每个插件 `package.json` + runtime 版本 + semver 判定），
-并在输出里标注 `source: "fallback"` —— **不会假装自己跑的是主插件**。
-
----
-
-## 7. 常见问题
-
-**Q：体检结论和 `compat_check` 工具会不会不一样？**
-不会。`source=plugin`（默认）时本插件调的就是主插件的 `runAction('check')`，同一份判定、同一份报告格式。
-只有主插件加载失败时才会退化为 `fallback`，届时输出里会明说。
+## 6. 常见问题
 
 **Q：缓存会不会读到旧版本的 `app.asar`？**
 不会。缓存判活看的是**内容指纹**（文件头 64 KB 的 sha1），DSH 升级换了归档指纹必变，缓存自动作废。
@@ -204,7 +185,7 @@ CLI **零 LLM 依赖**、**零网络**（只有显式 `--notes` / `--refresh` / 
 
 ---
 
-## 8. 参考实测（Windows 11 · 174 MB `app.asar` · Node 24）
+## 7. 参考实测（Windows 11 · 174 MB `app.asar` · Node 24）
 
 | 场景 | 耗时 |
 | --- | --- |
@@ -217,7 +198,7 @@ CLI **零 LLM 依赖**、**零网络**（只有显式 `--notes` / `--refresh` / 
 
 ---
 
-## 9. 文件清单
+## 8. 文件清单
 
 ```
 lib/asar-reader.js     自包含 ASAR 只读器（不依赖主插件）
