@@ -1,0 +1,30 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Sanitize check (no local paths / credentials)
+        run: node scripts/sanitize-check.mjs
+      - name: Syntax check (all sources)
+        run: |
+          set -e
+          for f in $(git ls-files '*.js' '*.mjs'); do
+            echo "checking $f"
+            node --check "$f"
+          done
+      - name: Package sanity
+        run: npm pack --dry-run

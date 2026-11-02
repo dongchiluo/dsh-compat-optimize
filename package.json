@@ -1,0 +1,86 @@
+{
+  "name": "dsh-compat-optimize",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Fast path for DSH plugin compatibility checks: disk cache warm-up, one-shot compact reports, and a zero-token offline CLI.",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "bin": {
+    "compat-check-cli": "bin/compat-check-cli.mjs"
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./tool": "./lib/tool.js",
+    "./check": "./lib/check.js",
+    "./cache": "./lib/asar-cache.js",
+    "./upstream": "./lib/upstream.js",
+    "./upstream-cache": "./lib/upstream-cache.js",
+    "./warm": "./lib/warm.js",
+    "./notes": "./lib/notes.js",
+    "./asar-reader": "./lib/asar-reader.js",
+    "./fallback": "./lib/fallback-check.js",
+    "./semver-lite": "./lib/semver-lite.js",
+    "./main-plugin": "./lib/main-plugin.js",
+    "./paths": "./lib/paths.js",
+    "./cli": "./bin/compat-check-cli.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/**/*.js",
+    "bin/**/*.mjs",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "LICENSE",
+    "_selftest.mjs"
+  ],
+  "scripts": {
+    "test": "node _selftest.mjs",
+    "selftest": "node _selftest.mjs",
+    "check": "node bin/compat-check-cli.mjs",
+    "verify": "node --check lib/index.js && node --check lib/tool.js && node --check bin/compat-check-cli.mjs"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "dsh",
+    "deepseek-harness",
+    "compatibility",
+    "asar",
+    "cache",
+    "cli"
+  ],
+  "engines": {
+    "node": ">=20",
+    "dsh": ">=0.2.1-rc.5 <0.3.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dongchiluo/dsh-compat-optimize.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dongchiluo/dsh-compat-optimize/issues"
+  },
+  "homepage": "https://github.com/dongchiluo/dsh-compat-optimize#readme",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.5",
+    "@deepseek-ai/schemastery": "~3.18.5",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.5"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    }
+  }
+}

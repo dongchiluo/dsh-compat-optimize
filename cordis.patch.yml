@@ -1,0 +1,36 @@
+# dsh-compat-optimize 的组合包 patch。
+#
+# 作为组合包安装后，DSH 会把本文件插入 profile 的加载树。
+# 这里**不写任何本机绝对路径**：留空即用运行时默认值
+# （baseDir = $DSH_COMPAT_BASE_DIR / $DSH_HOME / 用户主目录）。
+# 如需覆盖，在 profile 自己的 cordis.patch.yml 里按 id 写全所有字段
+#（覆盖是替换不是合并，少写一项就回到 schema 默认值）。
+- insert:
+    - id: tool-compat-optimize
+      name: 'dsh-compat-optimize'
+      config:
+        # 工作区根目录：留空 = 运行时默认（环境变量 / 用户主目录）
+        baseDir: ''
+        # 插件目录：留空 = <baseDir>/plugins
+        pluginsDir: ''
+        # DSH 安装目录：留空 = 自动探测（进程路径 → 常见安装位置）
+        installDir: ''
+        # 报告落盘目录：留空 = <baseDir>/out/compat
+        outDir: ''
+        # 缓存目录：留空 = <baseDir>/.cache/compat-check
+        #（若装了 dsh-compat-check，两边共用同一份缓存格式）
+        cacheDir: ''
+        # bench 连跑几次
+        iterations: 5
+        # 启动时预热缓存（解析一次 app.asar 头，约 50–60 ms）
+        warmOnStart: false
+        # 上游响应缓存 6 小时
+        notesCacheTtlMs: 21600000
+        # 主插件目录：留空 = 自动找同级兄弟目录 dsh-compat-check（不存在则走内置兜底）
+        mainPluginDir: ''
+        # 工具延迟加载：默认开。
+        # deferLoading **不会**把工具定义从每轮请求的 tools[] 里去掉 ——
+        # 宿主 ToolRegistry.schemaOf 照样投影它，只多带一个 deferLoading: true 标记；
+        # 它延迟的是「模型现在能不能直接调它」，不是「每轮多少 token」。
+        # 真正省常驻 token 的是把工具 DESCRIPTION 压短（433 → 104 字符）。
+        deferLoading: true

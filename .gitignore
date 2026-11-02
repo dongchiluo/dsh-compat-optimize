@@ -1,0 +1,21 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# 运行期产物（体检报告 / 缓存 / 临时目录）
+out/
+.cache/
+*.log
+tmp/
+.dsh-compat-optimize-tmp/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
