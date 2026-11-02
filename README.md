@@ -148,7 +148,34 @@ Everything runs without a DSH installation; the two assertions that import the D
 
 ---
 
-## 7. Requirements
+## 7. Benchmarks (Windows 11, Node 24)
+
+Measured with `node bin/compat-check-cli.mjs check --json` (`elapsedMs`); the `checkPlugins` row is the
+median of 40 direct `checkPluginsFallback()` calls. Fixtures are synthetic plugin directories, each with
+`engines.dsh` plus three `@deepseek-ai/*` peer declarations — the shape of a real desktop install.
+
+| Scenario | 20 plugins | 120 plugins |
+| --- | --- | --- |
+| `checkPlugins` (scan only) | 4.8 ms | 26.6 ms |
+| CLI `check` end-to-end | **10 ms** | **36–46 ms** |
+
+That is **0.22–0.38 ms per plugin** — the real hot path on Windows.
+
+Why it dominates: every plugin costs at least one `stat`, one `readFileSync` and one `JSON.parse`, plus
+up to 8 directory levels scanned per `@deepseek-ai/*` declaration while looking for vendored host copies.
+On Windows those syscalls go through NTFS and Defender's real-time scan, far slower than Linux's dentry
+cache; pnpm/bun `node_modules/.pnpm` symlink farms make path resolution worse (the scan skips
+`node_modules` and dot-directories).
+
+**Optimization measured and rejected**: caching `exists`/`readJson` in a per-run Map moved 20 and 120
+plugins from 4.76 → 4.77 ms and 26.58 → 26.85 ms — noise. Windows' directory cache is already fast;
+**repeated `stat` is not the bottleneck, the plugin count is.** To move it, narrow the scan with
+`include` or keep checks off the hot path (`warm` + `status`).
+
+asar numbers (174 MB `app.asar`, DSH installed): 191 ms uncached → 87–118 ms cold cache → 19 ms warm;
+CLI `check` 183 ms cold → 85–89 ms cached.
+
+## 8. Requirements
 
 - Node.js ≥ 20 (uses built-in `fetch`, `node:test`-free plain assertions)
 - DSH `>=0.2.1-rc.5 <0.3.0` when used as a plugin

@@ -185,16 +185,47 @@ CLI **零 LLM 依赖**、**零网络**（只有显式 `--notes` / `--refresh` / 
 
 ---
 
-## 7. 参考实测（Windows 11 · 174 MB `app.asar` · Node 24）
+## 7. 参考实测（Windows 11 · Node 24）
+
+### 7.1 插件扫描（本机实测）
+
+测法：`node bin/compat-check-cli.mjs check --json` 取返回里的 `elapsedMs`；
+`checkPlugins` 单列是直接调 `checkPluginsFallback()` 的中位数（40 次）。
+夹具为合成插件目录，每个插件含 `engines.dsh` 与 3 个 `@deepseek-ai/*` peer 声明 —— 与真实桌面环境形态一致。
+
+| 场景 | 20 个插件 | 120 个插件 |
+| --- | --- | --- |
+| `checkPlugins` 纯扫描 | 4.8 ms | 26.6 ms |
+| CLI `check` 全量（含探测、报告生成、落盘） | **10 ms** | **36–46 ms** |
+
+换算下来约 **0.22–0.38 ms/插件**，这就是热路径真正的大头。
+
+**为什么它在 Windows 上最贵**：
+
+- 每个插件至少 1 次 `stat` + 1 次 `readFileSync` + 1 次 `JSON.parse`；每份 `@deepseek-ai/*` 声明还要
+  沿目录链最多 8 层去找 vendored 宿主副本 —— 等于每插件几十次 `stat`；
+- 这些调用在 Windows 上要过 NTFS 与实时防护（Defender），比 Linux 的 dentry 缓存贵得多；
+  插件目录第一次被扫过时尤其明显；
+- pnpm / bun 的 `node_modules/.pnpm` 深层符号链接会放大路径解析成本 —— 扫描时已跳过
+  `node_modules` 与 `.` 开头的目录，避免误入。
+
+**一条实测结论（也是没做的优化）**：给 `exists` / `readJson` 套一层本次运行内的 Map 缓存后，
+20 与 120 插件场景分别是 4.76 → 4.77 ms、26.58 → 26.85 ms，差异都在噪声内 ——
+Windows 的目录项缓存已经足够快，**重复 `stat` 不是瓶颈，插件数量本身才是**。
+所以没有引入这层缓存，保持实现简单。
+
+真要压这部分，有效手段只有两个：用 `include` 只查关心的插件；或把体检移出热路径
+（`warm` 预热 + `status` 只读缓存）。
+
+### 7.2 asar 读取（装有 DSH 桌面端 · 174 MB `app.asar`）
 
 | 场景 | 耗时 |
 | --- | --- |
-| `detectDsh` 无缓存（主插件默认，一次体检解析 4 次头） | 191 ms |
+| `detectDsh` 无缓存（一次体检解析 4 次头） | 191 ms |
 | `detectDsh` 冷缓存（解析一次 + 写缓存） | 87–118 ms |
 | `detectDsh` 热缓存（跨进程命中条目缓存，不碰 4.76 MB 头） | 19 ms |
 | CLI `check` 冷启动（空缓存目录） | **183 ms** |
 | CLI `check` 命中缓存 | **85–89 ms** |
-| `checkPlugins`（扫 7 个插件，热路径的主要开销） | 57–76 ms |
 
 ---
 
